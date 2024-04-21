@@ -72,6 +72,21 @@ def load_pil_images(conversations: List[Dict[str, str]]) -> List[PIL.Image.Image
     return pil_images
 
 
+def load_pil_images_plain(images: List[str]) -> List[List[PIL.Image.Image]]:
+    """
+    images: List[str]: the list of image paths.
+
+    Returns:
+    pil_images (List[PIL.Image.Image]): the list of PIL images.
+    """
+    pil_images = []
+    for image_path in images:
+        pil_img = PIL.Image.open(image_path)
+        pil_img = pil_img.convert("RGB")
+        pil_images.append([pil_img])
+    return pil_images
+
+
 def load_json(filepath):
     with open(filepath, "r") as f:
         data = json.load(f)

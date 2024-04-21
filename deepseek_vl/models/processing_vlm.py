@@ -326,6 +326,40 @@ class VLChatProcessor(ProcessorMixin):
 
         return prepare
 
+    def batch_call(
+        self,
+        *,
+        conversations: List[List[Dict[str, str]]] = None,
+        images: List[Image] = None,
+        force_batchify: bool = True,
+        **kwargs,
+    ):
+        """
+
+        Args:
+            conversations (List[List[Dict]]): List of conversations with a list of messages;
+            images (List[List[ImageType]]): List of the list of images;
+            force_batchify (bool): force batchify the inputs;
+            **kwargs:
+
+        Returns:
+            outputs (BaseProcessorOutput): the output of the processor,
+                - input_ids (torch.LongTensor): [N + image tokens]
+                - images (torch.FloatTensor): [n_images, 3, H, W]
+                - image_id (int): the id of the image token
+                - num_image_tokens (List[int]): the number of image tokens
+        """
+        prepared_list = []
+        for item, image in zip(conversations, images):
+            prepared_list.append(self.process_one(
+                prompt=None, conversations=item, images=image
+            ))
+
+        if force_batchify:
+            prepare = self.batchify(prepared_list)
+
+        return prepare
+
     def batchify(
         self, prepare_list: List[VLChatProcessorOutput]
     ) -> BatchedVLChatProcessorOutput:
