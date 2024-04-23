@@ -59,13 +59,14 @@ class BatchedVLChatProcessorOutput(DictOutput):
     attention_mask: torch.Tensor
     images_seq_mask: torch.BoolTensor
     images_emb_mask: torch.BoolTensor
+    dtype: torch.dtype
 
-    def to(self, device, dtype=torch.bfloat16):
+    def to(self, device):
         self.input_ids = self.input_ids.to(device)
         self.attention_mask = self.attention_mask.to(device)
         self.images_seq_mask = self.images_seq_mask.to(device)
         self.images_emb_mask = self.images_emb_mask.to(device)
-        self.pixel_values = self.pixel_values.to(device=device, dtype=dtype)
+        self.pixel_values = self.pixel_values.to(device=device, dtype=self.dtype)
         return self
 
 
@@ -355,13 +356,14 @@ class VLChatProcessor(ProcessorMixin):
                 prompt=None, conversations=item, images=image
             ))
 
+        dtype = kwargs.get("dtype", torch.bfloat16)
         if force_batchify:
-            prepare = self.batchify(prepared_list)
+            prepare = self.batchify(prepared_list, dtype=dtype)
 
         return prepare
 
     def batchify(
-        self, prepare_list: List[VLChatProcessorOutput]
+        self, prepare_list: List[VLChatProcessorOutput], dtype=torch.bfloat16
     ) -> BatchedVLChatProcessorOutput:
         """
         Preprocesses the inputs for multimodal inference.
@@ -419,6 +421,7 @@ class VLChatProcessor(ProcessorMixin):
             images_seq_mask=batched_images_seq_mask,
             images_emb_mask=batched_images_emb_mask,
             sft_format=sft_format,
+            dtype=dtype
         )
 
         return batched_prepares
